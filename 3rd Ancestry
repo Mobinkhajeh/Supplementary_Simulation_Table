@@ -1,0 +1,79 @@
+############### 3 ancestries  ################
+sim.anc3<-read.table("/nfs/storage/math/gross-s2/projects/mixtures/simulations/simV2/final_sims_corrected/sim_3ancestry_corrected.txt", header=T)
+
+## check to see if read in correctly
+dim(sim.anc3)
+##[1] 720000     30
+
+sim.anc3[1:5,]
+
+## we see the number of ancestries in the 3 ancestries which adds up to 720000. 
+table(sim.anc3$A1)
+## AFR   EAS    EUR    IAM    SAS 
+## 168000 156000 144000 132000 120000
+
+table(sim.anc3$A2)
+## AFR    EAS    EUR    IAM    SAS 
+## 120000 132000 144000 156000 168000
+
+table(sim.anc3$A3)
+## AFR    EAS    EUR    IAM    SAS 
+## 144000 144000 144000 144000 144000
+
+
+### number of simulation scenarios
+table(table(sim.anc3$A1, sim.anc3$A2, sim.anc3$A3, sim.anc3$S1, sim.anc3$S2)==1000)
+
+##FALSE  TRUE 
+##1780   720
+
+
+
+## estimating mean and 95% CI for each simulation scenario
+temp.out.2<-c()
+
+for(i in c("AFR","EAS","EUR","IAM","SAS")){
+  for(j in c("AFR","EAS","EUR","IAM","SAS")){
+    for(k in c("AFR","EAS","EUR","IAM","SAS")){
+      if(i==j | i==k | j==k){next}
+      for(l in c("0", "0.01", "0.05", "0.1")){
+        for(p in c("0", "0.01", "0.05", "0.1", "0.25")){
+          
+          temp.sim.param.2<-c(AFR="(0,0)",EAS="(0,0)", EUR="(0,0)",IAM="(0,0)",SAS="(0,0)")
+          temp.2<-sim.anc3[sim.anc3$A1==i & sim.anc3$A2==j & sim.anc3$A3==k & sim.anc3$S1==l & sim.anc3$S2==p,]
+          
+          if(nrow(temp.2)==0){next}
+          print(nrow(temp.2))
+          
+          temp.mean.2<-apply(temp[,c("R_AFR_acc","R_EAS_acc","R_EUR_acc", "R_IAM_acc", "R_SAS_acc")], 2,function(x){formatC(mean(x),format="e", digits=2)})
+          temp.95CI.2<-apply(temp[,c("R_AFR_acc","R_EAS_acc","R_EUR_acc", "R_IAM_acc", "R_SAS_acc")], 2,function(x){paste("(", paste(formatC(quantile(x,probs=c(.025,.975)),format="e", digits=2), collapse=","), ")", sep="")})
+          
+          temp.mean.iter.2<-apply(temp[,c("R_val", "R_iter", "R_time")], 2,function(x){formatC(mean(x),format="f",digits=2)})
+          temp.95CI.iter.2<-apply(temp[,c("R_val", "R_iter", "R_time")], 2,function(x){paste("(", paste(formatC(quantile(x,probs=c(.025,.975)),format="f",digits=2), collapse=","), ")", sep="")})
+          
+          temp.both.2<-paste(temp.mean.2, temp.95CI.2)
+          temp.both.iter.2<-paste(temp.mean.iter.2, temp.95CI.iter.2)
+          
+          temp.sim.param.2[i]<-paste("(", temp$S1[1], ",", temp$E1[1], ")", sep="")
+          temp.sim.param.2[j]<-paste("(", temp$S2[1], ",", temp$E2[1], ")", sep="")
+          temp.sim.param.2[k]<-paste("(", temp$S3[1], ",", temp$E3[1], ")", sep="") 
+          
+          temp.out.2<-rbind(temp.out.2,c(i,temp.sim.param.2, temp.both.2, temp.both.iter.2))
+        }#end p loop 
+      }#end l loop
+    }#end k loop
+  }#end j loop
+}#end i loop
+
+View(temp.out.2)
+
+##checking output
+dim(temp.out.2)
+##[1] 720  14
+
+temp.out<-as.data.frame(temp.out.2)[,-1]
+names(temp.out)<-c(paste(rep(names(temp.out)[1:5],2), rep(c("", "_both"), each=5), sep=""), c("LS", "N.Iter", "Time"))
+
+write.table(temp.out, "/nfs/storage/math/gross-s2/projects/mixtures/simulations/simV2/final_sims_corrected/sim_3ancestry_TABLE.txt", sep="\t", row.names=F, quote=F)
+
+
