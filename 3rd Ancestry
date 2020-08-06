@@ -1,4 +1,4 @@
-############### 3 ancestries  ################
+############## 3 ancestries  ################
 sim.anc3<-read.table("/nfs/storage/math/gross-s2/projects/mixtures/simulations/simV2/final_sims_corrected/sim_3ancestry_corrected.txt", header=T)
 
 ## check to see if read in correctly
